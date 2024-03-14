@@ -62,14 +62,14 @@ then
 else
 	( exit 20 )
 fi
-[ $# -eq 10 ] || { echo >&2 "fail: Expected status code = 10" && exit 1; }
+[ $? -eq 10 ] || { echo >&2 "fail: Expected status code = 10" && exit 1; }
 if false
 then
 	( exit 10 )
 else
 	( exit 20 )
 fi
-[ $# -eq 20 ] || { echo >&2 "fail: Expected status code = 20" && exit 1; }
+[ $? -eq 20 ] || { echo >&2 "fail: Expected status code = 20" && exit 1; }
 
 echo "-> test alternate syntax"
 # These tests are only expected to parse, they do not make assertions

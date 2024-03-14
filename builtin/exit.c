@@ -30,5 +30,5 @@ int builtin_exit(struct mrsh_state *state, int argc, char *argv[]) {
 
 	state->exit = status;
 	frame_priv->branch_control = MRSH_BRANCH_EXIT;
-	return status;
+	exit(status);
 }
