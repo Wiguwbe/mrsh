@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <mrsh/builtin.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,13 +8,7 @@
 #include "builtin.h"
 #include "shell/shell.h"
 
-struct builtin {
-	const char *name;
-	mrsh_builtin_func func;
-	bool special;
-};
-
-static const struct builtin builtins[] = {
+static const struct mrsh_builtin builtins[] = {
 	// Keep alpha sorted
 	{ ".", builtin_dot, true },
 	{ ":", builtin_colon, true },
@@ -52,43 +47,47 @@ static const struct builtin builtins[] = {
 	{ "wait", builtin_wait, false },
 };
 
-// The following commands are explicitly unspecified by POSIX
-static const char *unspecified_names[] = {
-	"alloc", "autoload", "bind", "bindkey", "builtin", "bye", "caller", "cap",
-	"chdir", "clone", "comparguments", "compcall", "compctl", "compdescribe",
-	"compfiles", "compgen", "compgroups", "complete", "compquote", "comptags",
-	"comptry", "compvalues", "declare", "dirs", "disable", "disown", "dosh",
-	"echotc", "echoti", "help", "history", "hist", "let", "local", "login",
-	"logout", "map", "mapfile", "popd", "print", "pushd", "readarray", "repeat",
-	"savehistory", "source", "shopt", "stop", "suspend", "typeset", "whence"
-};
-
-static const struct builtin unspecified = {
-	.name = "unspecified",
-	.func = builtin_unspecified,
-	.special = false,
-};
+static struct mrsh_builtin *extra_builtins = NULL;
+static int extra_builtin_count = 0;
 
 static int builtin_compare(const void *_a, const void *_b) {
-	const struct builtin *a = _a, *b = _b;
+	const struct mrsh_builtin *a = _a, *b = _b;
 	return strcmp(a->name, b->name);
 }
 
-static int unspecified_compare(const void *_a, const void *_b) {
-	const char *a = _a;
-	const char *const *b = _b;
-	return strcmp(a, *b);
+static const struct mrsh_builtin *get_builtin(const char *name) {
+	void *builtin = NULL;
+	struct mrsh_builtin key = { .name = name };
+	builtin = bsearch(&key, builtins, sizeof(builtins) / sizeof(builtins[0]),
+		sizeof(builtins[0]), builtin_compare);
+	if (builtin != NULL)
+		return (struct mrsh_builtin*)builtin;
+
+	return bsearch(&key, extra_builtins, extra_builtin_count,
+		sizeof(struct mrsh_builtin), builtin_compare);
 }
 
-static const struct builtin *get_builtin(const char *name) {
-	if (bsearch(name, unspecified_names,
-			sizeof(unspecified_names) / sizeof(unspecified_names[0]),
-			sizeof(unspecified_names[0]), unspecified_compare)) {
-		return &unspecified;
+bool mrsh_add_extra_builtin(struct mrsh_builtin extra_builtin) {
+	size_t new_size = extra_builtin_count + 1;
+	void *new_ptr = realloc(extra_builtins, new_size * sizeof(struct mrsh_builtin));
+	if (new_ptr == NULL) {
+		fprintf(stderr, "failed to add new builtin: %s\n", strerror(errno));
+		return false;
 	}
-	struct builtin key = { .name = name };
-	return bsearch(&key, builtins, sizeof(builtins) / sizeof(builtins[0]),
-		sizeof(builtins[0]), builtin_compare);
+	extra_builtins = (struct mrsh_builtin*)new_ptr;
+	extra_builtins[extra_builtin_count++] = extra_builtin;
+	return true;
+}
+
+bool mrsh_add_extra_builtins(struct mrsh_builtin *list, size_t count) {
+	size_t new_size = extra_builtin_count + count;
+	void *new_ptr = realloc(extra_builtins, new_size * sizeof(struct mrsh_builtin));
+	if (new_ptr == NULL) {
+		fprintf(stderr, "failed to add new builtins: %s\n", strerror(errno));
+		return false;
+	}
+	memcpy(extra_builtins + extra_builtin_count, list, count);
+	return true;
 }
 
 bool mrsh_has_builtin(const char *name) {
@@ -96,7 +95,7 @@ bool mrsh_has_builtin(const char *name) {
 }
 
 bool mrsh_has_special_builtin(const char *name) {
-	const struct builtin *builtin = get_builtin(name);
+	const struct mrsh_builtin *builtin = get_builtin(name);
 	return builtin != NULL && builtin->special;
 }
 
@@ -104,7 +103,7 @@ int mrsh_run_builtin(struct mrsh_state *state, int argc, char *argv[]) {
 	assert(argc > 0);
 
 	const char *name = argv[0];
-	const struct builtin *builtin = get_builtin(name);
+	const struct mrsh_builtin *builtin = get_builtin(name);
 	if (builtin == NULL) {
 		return -1;
 	}

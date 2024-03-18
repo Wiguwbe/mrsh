@@ -5,9 +5,6 @@
 
 struct mrsh_state;
 
-typedef int (*mrsh_builtin_func)(struct mrsh_state *state,
-	int argc, char *argv[]);
-
 void print_escaped(const char *value);
 
 int builtin_alias(struct mrsh_state *state, int argc, char *argv[]);
