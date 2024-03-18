@@ -48,23 +48,23 @@ include $(OUTDIR)/cppcache
 		$(CPP) $(INCLUDE) -MM -MT $@ $< >> $(OUTDIR)/cppcache
 	@$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $<
 
-$(OUTDIR)/libmrsh.a: $(libmrsh_objects)
+libmrsh.a: $(libmrsh_objects)
 	@printf 'AR\t$@\n'
 	@$(AR) -csr $@ $(libmrsh_objects)
 
-libmrsh.so.$(SOVERSION): $(OUTDIR)/libmrsh.a
+libmrsh.so.$(SOVERSION): libmrsh.a
 	@printf 'LD\t$@\n'
-	@$(CC) -shared $(LDFLAGS) -o $@ $(OUTDIR)/libmrsh.a
+	@$(CC) -shared $(LDFLAGS) -o $@ libmrsh.a
 
 $(OUTDIR)/mrsh.pc:
 	@printf 'MKPC\t$@\n'
 	@PREFIX=$(PREFIX) ./mkpc $@
 
-mrsh: $(OUTDIR)/libmrsh.a $(mrsh_objects)
+mrsh: libmrsh.a $(mrsh_objects)
 	@printf 'CCLD\t$@\n'
 	@$(CC) -o $@ $(LDFLAGS) $(mrsh_objects) -L$(OUTDIR) -lmrsh $(LIBS)
 
-highlight: $(OUTDIR)/libmrsh.a $(highlight_objects)
+highlight: libmrsh.a $(highlight_objects)
 	@printf 'CCLD\t$@\n'
 	@$(CC) -o $@ $(LDFLAGS) $(highlight_objects) -L$(OUTDIR) -lmrsh $(LIBS)
 
