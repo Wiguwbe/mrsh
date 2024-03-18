@@ -17,7 +17,7 @@ int builtin_return(struct mrsh_state *state, int argc, char *argv[]) {
 	if (argc == 2) {
 		char *end;
 		n = strtol(argv[1], &end, 10);
-		if (end[0] != '\0' || argv[0][0] == '\0' || n < 0 || n > 255) {
+		if (end[0] != '\0' || argv[0][0] == '\0') {
 			fprintf(stderr, "%s: invalid return number '%s'\n", argv[0], argv[1]);
 			return 1;
 		}
@@ -27,6 +27,6 @@ int builtin_return(struct mrsh_state *state, int argc, char *argv[]) {
 
 	frame_priv->nloops = 0;
 	frame_priv->branch_control = MRSH_BRANCH_RETURN;
-	state->last_status = n;
+	state->last_status = n % 256;
 	return TASK_STATUS_INTERRUPTED;
 }
