@@ -38,6 +38,28 @@ struct mrsh_program *mrsh_parse_program(struct mrsh_parser *parser);
 struct mrsh_program *mrsh_parse_line(struct mrsh_parser *parser);
 
 /**
+ * Peek
+ */
+size_t mrsh_parser_peek(struct mrsh_parser *parser, char *buf, size_t size);
+/**
+ * Peek char
+ */
+char mrsh_parser_peek_char(struct mrsh_parser *parser);
+/**
+ * Read
+ */
+size_t mrsh_parser_read(struct mrsh_parser *parser, char *buf, size_t size);
+/**
+ * Read char
+ */
+char mrsh_parser_read_char(struct mrsh_parser *parser);
+
+/**
+ * Set error
+ */
+void mrsh_parser_set_error(struct mrsh_parser *parser, const char *msg);
+
+/**
  * Parse an arithmetic expression.
  */
 struct mrsh_arithm_expr *mrsh_parse_arithm_expr(struct mrsh_parser *parser);

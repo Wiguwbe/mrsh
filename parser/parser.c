@@ -236,6 +236,10 @@ void parser_set_error(struct mrsh_parser *parser, const char *msg) {
 	}
 }
 
+void mrsh_parser_set_error(struct mrsh_parser *parser, const char *msg)
+	__attribute__((alias("parser_set_error")));
+
+
 const char *mrsh_parser_error(struct mrsh_parser *parser,
 		struct mrsh_position *pos) {
 	if (pos != NULL) {
@@ -368,3 +372,13 @@ void mrsh_parser_reset(struct mrsh_parser *parser) {
 	parser->has_sym = false;
 	parser->pos = (struct mrsh_position){0};
 }
+
+// aliases
+size_t mrsh_parser_peek(struct mrsh_parser *parser, char *buf, size_t size)
+	__attribute__((alias("parser_peek")));
+char mrsh_parser_peek_char(struct mrsh_parser *parser)
+	__attribute__((alias("parser_peek_char")));
+size_t mrsh_parser_read(struct mrsh_parser *parser, char *buf, size_t size)
+	__attribute__((alias("parser_read")));
+char mrsh_parser_read_char(struct mrsh_parser *parser)
+	__attribute__((alias("parser_read_char")));
